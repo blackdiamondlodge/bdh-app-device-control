@@ -3,6 +3,7 @@ Tests for the device_control app.
 """
 
 import json
+import os
 from unittest.mock import patch, MagicMock
 from django.test import TestCase, RequestFactory, tag
 from django.urls import reverse
@@ -122,7 +123,7 @@ class ViewTests(TestCase):
     def test_main_page_renders(self):
         resp = self.client.get(reverse("device_control"))
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, "Device Control")
+        self.assertContains(resp, "Controls")
         self.assertContains(resp, "dc-tab")
 
     def test_filter_bar_visible_on_initial_load(self):
@@ -664,6 +665,59 @@ class DeviceControlShadesSliderTest(StaticLiveServerTestCase):
             )
 
 
+class ScenesTests(TestCase):
+    STATES = [
+        {"entity_id": "scene.movie", "state": "x",
+         "attributes": {"friendly_name": "Movie", "icon": "mdi:movie"}},
+        {"entity_id": "scene.party", "state": "x",
+         "attributes": {"friendly_name": "Party", "icon": "mdi:nope"}},
+        {"entity_id": "light.a", "state": "on", "attributes": {"friendly_name": "A"}},
+    ]
+
+    def test_get_scenes_maps_icons_and_skips_other_entities(self):
+        from device_control.scenes import DEFAULT_ICON, get_scenes
+        self.assertEqual(get_scenes(self.STATES), [
+            {"id": "scene.movie", "name": "Movie", "icon": "fa-solid fa-film"},
+            {"id": "scene.party", "name": "Party", "icon": DEFAULT_ICON},
+        ])
+
+    def test_filter_reads_new_and_legacy_names(self):
+        from device_control.scenes import get_scenes
+        for var in ("BDH_DEVICE_CONTROL_SCENES_FILTER", "BDH_SCENES_FILTER", "SCENE_FILTER"):
+            with self.subTest(var=var), patch.dict(os.environ, {var: " party ,other"}):
+                self.assertEqual([s["id"] for s in get_scenes(self.STATES)], ["scene.party"])
+
+    @patch("device_control.scenes.get_all_states")
+    def test_scenes_api_lists_scenes(self, mock_states):
+        mock_states.return_value = self.STATES
+        resp = self.client.get(reverse("device_control_scenes"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual([s["name"] for s in resp.json()["scenes"]], ["Movie", "Party"])
+
+    @patch("device_control.scenes.get_all_states", side_effect=views.HAError("down"))
+    def test_scenes_api_reports_ha_errors(self, _):
+        resp = self.client.get(reverse("device_control_scenes"))
+        self.assertEqual(resp.status_code, 502)
+
+    @patch("device_control.scenes.call_service", return_value=(True, None))
+    @patch("device_control.scenes.get_all_states")
+    def test_activate_only_known_scenes(self, mock_states, mock_call):
+        mock_states.return_value = self.STATES
+        url = reverse("device_control_scene_action")
+        for scene_id in ("scene.unknown", "light.a"):
+            resp = self.client.post(url, json.dumps({"scene_id": scene_id}),
+                                    content_type="application/json")
+            self.assertEqual(resp.status_code, 400)
+        mock_call.assert_not_called()
+        resp = self.client.post(url, json.dumps({"scene_id": "scene.movie"}),
+                                content_type="application/json")
+        self.assertEqual(resp.json(), {"ok": True})
+        mock_call.assert_called_once_with("scene", "turn_on", "scene.movie")
+
+    def test_scenes_is_the_first_tab(self):
+        self.assertEqual(TABS[0]["key"], "scenes")
+
+
 class HomepageHookTests(TestCase):
     STATES = [
         {"entity_id": "climate.living", "state": "heat"},
@@ -726,3 +780,21 @@ class HomepageHookTests(TestCase):
                  for s in self.STATES]
         with patch("device_control.homepage.get_all_states", return_value=unlit):
             self.assertEqual(shortcuts(), [])
+
+    def test_scenes_are_offered_before_fireplaces_off(self):
+        from device_control.homepage import shortcuts
+        states = ScenesTests.STATES + self.STATES
+        with patch("device_control.homepage.get_all_states", return_value=states):
+            items = shortcuts()
+        self.assertEqual([(s.id, s.title) for s in items], [
+            ("scene-movie", "Movie"), ("scene-party", "Party"),
+            ("fireplaces_off", "Fireplaces off")])
+
+    @patch("device_control.scenes.call_service", return_value=(True, None))
+    @patch("device_control.scenes.get_all_states", return_value=ScenesTests.STATES)
+    def test_scene_shortcut_activates_only_known_scenes(self, _, mock_call):
+        from device_control.homepage import run_shortcut
+        self.assertIsNone(run_shortcut("scene-movie"))
+        mock_call.assert_called_once_with("scene", "turn_on", "scene.movie")
+        with self.assertRaises(ValueError):
+            run_shortcut("scene-unknown")

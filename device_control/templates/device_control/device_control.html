@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Device Control{% endblock %}
+{% block title %}Controls{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'device_control/fireplace.css' %}">
@@ -372,6 +372,47 @@
         gap: 8px;
     }
 
+    /* Scenes tab */
+    .sc-msg {
+        text-align: center;
+        padding: 40px;
+        color: #888;
+    }
+
+    .sc-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+    }
+
+    .sc-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 110px;
+        padding: 14px 10px;
+        background: #333;
+        color: #ddd;
+        border: 2px solid rgba(255,255,255,0.15);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .sc-btn i {
+        font-size: 1.8rem;
+        color: #FFD700;
+    }
+
+    .sc-btn:hover { background: #3a3a3a; }
+    .sc-btn.pending { opacity: 0.6; pointer-events: none; }
+    .sc-btn.done { border-color: #4caf50; }
+    .sc-btn.failed { border-color: #f44336; }
+
     /* Loading spinner */
     .dc-loading {
         text-align: center;
@@ -635,7 +676,7 @@
 <!-- Fixed header with tabs -->
 <div class="dc-header">
     <div class="dc-header-inner">
-        <h1><i class="fas fa-sliders-h"></i> Device Control</h1>
+        <h1><i class="fas fa-sliders-h"></i> Controls</h1>
         <div class="dc-tabs">
             {% for tab in tabs %}
             <button class="dc-tab{% if forloop.first %} active{% endif %}"
@@ -664,7 +705,10 @@
          data-states-url="{% url 'device_control_gemstone_states' %}"
          data-action-url="{% url 'device_control_gemstone_action' %}"
          data-csrf="{{ csrf_token }}"{% endif %}>
-        {% if tab.key == "fireplace" %}
+        {% if tab.key == "scenes" %}
+        <div class="sc-msg" id="scMsg"><i class="fas fa-spinner fa-spin"></i> Loading scenes...</div>
+        <div class="sc-grid" id="scGrid"></div>
+        {% elif tab.key == "fireplace" %}
         <div class="fp-wrap">
             <div class="fp-select" id="fpSelect"></div>
             <div class="fp-msg" id="fpMsg" hidden></div>
@@ -860,6 +904,63 @@
         // Re-check scroll hint when switching tabs
         observer.disconnect();
         observer.observe(sentinel);
+    }
+
+    // ── Scenes ──
+    const SCENES_URL = "{% url 'device_control_scenes' %}";
+    const SCENE_ACTION_URL = "{% url 'device_control_scene_action' %}";
+    function loadScenes() {
+        const grid = document.getElementById('scGrid');
+        const msg = document.getElementById('scMsg');
+        if (!grid) return;
+        fetch(SCENES_URL)
+            .then(r => r.json().then(d => ({ ok: r.ok, d })))
+            .then(({ ok, d }) => {
+                if (!ok) throw new Error(d.error || 'Home Assistant unavailable');
+                grid.innerHTML = '';
+                if (!d.scenes.length) {
+                    msg.textContent = 'No scenes configured.';
+                    return;
+                }
+                msg.style.display = 'none';
+                d.scenes.forEach(scene => {
+                    const btn = document.createElement('button');
+                    btn.className = 'sc-btn';
+                    btn.type = 'button';
+                    const icon = document.createElement('i');
+                    icon.className = scene.icon;
+                    const name = document.createElement('span');
+                    name.textContent = scene.name;
+                    btn.append(icon, name);
+                    btn.addEventListener('click', () => activateScene(scene.id, btn));
+                    grid.appendChild(btn);
+                });
+            })
+            .catch(err => {
+                msg.style.display = '';
+                msg.innerHTML = '';
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-exclamation-triangle';
+                msg.append(icon, ' Could not load scenes: ' + err.message);
+            });
+    }
+
+    function activateScene(sceneId, btn) {
+        btn.classList.remove('done', 'failed');
+        btn.classList.add('pending');
+        fetch(SCENE_ACTION_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify({ scene_id: sceneId }),
+        })
+            .then(r => r.json().then(d => r.ok && d.ok))
+            .catch(() => false)
+            .then(ok => {
+                btn.classList.remove('pending');
+                btn.classList.add(ok ? 'done' : 'failed');
+                setTimeout(() => btn.classList.remove('done', 'failed'), 2000);
+                if (ok) setTimeout(fetchStates, 1500);
+            });
     }
 
     // ── Fetch states ──
@@ -1206,6 +1307,7 @@
 
     // ── Init ──
     document.addEventListener('DOMContentLoaded', () => {
+        loadScenes();
         fetchStates();
         // Auto-refresh every 10 seconds
         refreshTimer = setInterval(fetchStates, 10000);
