@@ -669,6 +669,11 @@ class HomepageHookTests(TestCase):
         {"entity_id": "climate.living", "state": "heat"},
         {"entity_id": "climate.bedroom", "state": "off"},
         {"entity_id": "climate.nest", "state": "heat"},
+        {"entity_id": "light.a", "state": "on", "attributes": {}},
+        {"entity_id": "light.b", "state": "on", "attributes": {}},
+        {"entity_id": "light.c", "state": "off", "attributes": {}},
+        {"entity_id": "light.group", "state": "on", "attributes": {"entity_id": ["light.a"]}},
+        {"entity_id": "switch.d", "state": "on", "attributes": {}},
     ]
 
     def setUp(self):
@@ -681,9 +686,22 @@ class HomepageHookTests(TestCase):
             patcher.start()
             self.addCleanup(patcher.stop)
 
-    def test_status_counts_fireplaces(self):
+    def test_status_counts_lights_and_fireplaces(self):
         from device_control.homepage import status
-        self.assertEqual(status().text, "1 of 2 fireplaces on")
+        result = status()
+        self.assertEqual(result.text, "2 lights on · 1 of 2 fireplaces on")
+        self.assertEqual(result.level, "on")
+
+    def test_status_when_everything_is_off(self):
+        from device_control.homepage import status
+        states = [{"entity_id": "climate.living", "state": "off"},
+                  {"entity_id": "light.a", "state": "off", "attributes": {}}]
+        with patch("device_control.homepage.get_all_states", return_value=states), \
+                patch("device_control.homepage._napoleon_registry",
+                      return_value={"entities": {"climate.living": {}}}):
+            result = status()
+        self.assertEqual(result.text, "All lights off · Fireplace off")
+        self.assertEqual(result.level, "info")
 
     @patch("device_control.homepage.call_service", return_value=(True, None))
     def test_fireplaces_off_only_touches_lit_fireplaces(self, mock_call):
