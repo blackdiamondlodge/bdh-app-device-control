@@ -9,12 +9,12 @@ spec = PluginSpec(
     run_shortcut="device_control.homepage.run_shortcut",
     tiles=(
         Tile(
-            title="Fireplaces & Devices",
+            title="Controls",
             url_name="device_control",
             icon="device_control/hub/icon.svg",
             section="lodge",
-            subtitle="Fireplaces, blinds & more",
-            order=30,
+            subtitle="Lights, shades, fireplaces & more",
+            order=10,
         ),
     ),
 )

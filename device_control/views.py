@@ -25,6 +25,7 @@ from .ha_client import (
     ws_commands,
 )
 from . import gemstone_client
+from .scenes import activate_scene, get_scenes
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,34 @@ SERVICE_MAP = {
 def device_control_view(request):
     """Render the device control page shell with tab definitions."""
     return render(request, "device_control/device_control.html", {"tabs": TABS})
+
+
+def device_control_scenes(request):
+    """AJAX endpoint: the scenes for the Scenes tab, or 502 when HA is down."""
+    try:
+        return JsonResponse({"scenes": get_scenes()})
+    except HAError as exc:
+        logger.warning("Scenes fetch failed: %s", exc)
+        return JsonResponse({"error": str(exc)}, status=502)
+
+
+@require_POST
+def device_control_scene_action(request):
+    """AJAX endpoint: activate a scene. Expects JSON body: { scene_id }."""
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+    scene_id = body.get("scene_id") if isinstance(body, dict) else None
+    if not isinstance(scene_id, str) or not scene_id.startswith("scene."):
+        return JsonResponse({"error": "Invalid scene_id"}, status=400)
+    try:
+        if scene_id not in {s["id"] for s in get_scenes()}:
+            return JsonResponse({"error": "Unknown scene"}, status=400)
+        activate_scene(scene_id)
+    except (HAError, RuntimeError) as exc:
+        return JsonResponse({"ok": False, "error": str(exc)}, status=502)
+    return JsonResponse({"ok": True})
 
 
 def device_control_states(request):

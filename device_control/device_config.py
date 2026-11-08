@@ -418,6 +418,7 @@ GEMSTONE_OVERRIDES = {
 # All tabs in display order
 # ──────────────────────────────────────────────
 TABS = [
+    {"key": "scenes", "label": "Scenes", "icon": "fa-magic", "devices": {}},
     {"key": "lights", "label": "Lights", "icon": "fa-lightbulb", "devices": LIGHT_DEVICES},
     {"key": "shades", "label": "Shades", "icon": "fa-window-maximize", "devices": BLIND_DEVICES},
     {"key": "fans", "label": "Fans", "icon": "fa-fan", "devices": FAN_DEVICES},
