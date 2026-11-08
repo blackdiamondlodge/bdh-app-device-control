@@ -1,5 +1,6 @@
 from bdh_sdk import ALL_MODES, INFO, ON, Shortcut, Status
 
+from .device_config import TABS
 from .ha_client import call_service, get_all_states
 from .views import _napoleon_registry
 
@@ -21,14 +22,23 @@ def _is_on(state):
     return state.get("state") not in ("off", "unavailable", "unknown", None)
 
 
+def _configured_lights():
+    return {
+        dev["entity_id"]
+        for tab in TABS
+        for devices in tab["devices"].values()
+        for dev in devices
+        if dev.get("type") == "light"
+    }
+
+
 def _lights_on(states):
-    # Light groups list their members in an entity_id attribute; skip them
-    # so each bulb is counted once.
+    # Only lights shown in the app count, so AP LEDs and appliance lights
+    # don't inflate the number.
+    lights = _configured_lights()
     return sum(
         1 for s in states
-        if s.get("entity_id", "").startswith("light.")
-        and s.get("state") == "on"
-        and "entity_id" not in (s.get("attributes") or {})
+        if s.get("entity_id") in lights and s.get("state") == "on"
     )
 
 
@@ -53,7 +63,7 @@ def status():
 
 def shortcuts():
     fireplaces = _fireplaces()
-    if not fireplaces:
+    if not any(_is_on(s) for s in fireplaces):
         return []
     return [
         Shortcut(
