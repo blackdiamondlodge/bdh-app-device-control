@@ -6,30 +6,50 @@ from .views import _napoleon_registry
 FIREPLACES_OFF = "fireplaces_off"
 
 
-def _fireplaces():
+def _fireplaces(states=None):
     """Napoleon fireplace climate entities with their current state."""
     registry = _napoleon_registry()
     climates = {
         eid for eid in registry["entities"] if eid.startswith("climate.")
     }
-    return [s for s in get_all_states() if s.get("entity_id") in climates]
+    if states is None:
+        states = get_all_states()
+    return [s for s in states if s.get("entity_id") in climates]
 
 
 def _is_on(state):
     return state.get("state") not in ("off", "unavailable", "unknown", None)
 
 
-def status():
-    fireplaces = _fireplaces()
-    if not fireplaces:
-        return None
+def _lights_on(states):
+    # Light groups list their members in an entity_id attribute; skip them
+    # so each bulb is counted once.
+    return sum(
+        1 for s in states
+        if s.get("entity_id", "").startswith("light.")
+        and s.get("state") == "on"
+        and "entity_id" not in (s.get("attributes") or {})
+    )
+
+
+def _fireplace_text(fireplaces):
     on = sum(1 for s in fireplaces if _is_on(s))
     if on == 0:
-        return Status("Fireplaces off" if len(fireplaces) > 1 else "Fireplace off", INFO)
+        return "Fireplaces off" if len(fireplaces) > 1 else "Fireplace off"
     if len(fireplaces) == 1:
-        return Status("Fireplace on", ON)
-    return Status(f"{on} of {len(fireplaces)} fireplaces on", ON)
+        return "Fireplace on"
+    return f"{on} of {len(fireplaces)} fireplaces on"
 
+
+def status():
+    states = get_all_states()
+    lights = _lights_on(states)
+    fireplaces = _fireplaces(states)
+    parts = [f"{lights} light{'s' if lights != 1 else ''} on" if lights else "All lights off"]
+    if fireplaces:
+        parts.append(_fireplace_text(fireplaces))
+    anything_on = lights or any(_is_on(s) for s in fireplaces)
+    return Status(" · ".join(parts), ON if anything_on else INFO)
 
 def shortcuts():
     fireplaces = _fireplaces()
