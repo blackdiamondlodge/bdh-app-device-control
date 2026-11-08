@@ -673,8 +673,15 @@ class HomepageHookTests(TestCase):
         {"entity_id": "light.b", "state": "on", "attributes": {}},
         {"entity_id": "light.c", "state": "off", "attributes": {}},
         {"entity_id": "light.group", "state": "on", "attributes": {"entity_id": ["light.a"]}},
+        {"entity_id": "light.office_ap_led", "state": "on", "attributes": {}},
         {"entity_id": "switch.d", "state": "on", "attributes": {}},
     ]
+    TABS = [{"devices": {"Room": [
+        {"entity_id": "light.a", "type": "light"},
+        {"entity_id": "light.b", "type": "light"},
+        {"entity_id": "light.c", "type": "light"},
+        {"entity_id": "switch.d", "type": "switch"},
+    ]}}]
 
     def setUp(self):
         registry = {"entities": {"climate.living": {}, "climate.bedroom": {}, "switch.living": {}}}
@@ -685,6 +692,9 @@ class HomepageHookTests(TestCase):
             patcher = patch(target, return_value=value)
             patcher.start()
             self.addCleanup(patcher.stop)
+        patcher = patch("device_control.homepage.TABS", self.TABS)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def test_status_counts_lights_and_fireplaces(self):
         from device_control.homepage import status
