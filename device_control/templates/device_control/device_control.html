@@ -3,697 +3,265 @@
 
 {% block title %}Controls{% endblock %}
 
+{% block body_class %}dc-page{% endblock %}
+
 {% block content %}
 <link rel="stylesheet" href="{% static 'device_control/fireplace.css' %}">
 <link rel="stylesheet" href="{% static 'device_control/gemstone.css' %}">
 <style>
-    html, body {
-        height: 100%;
-        margin: 0;
-        background-color: #222;
-        color: #fff;
-        font-family: Arial, sans-serif;
-    }
-
-    .dc-header {
-        position: fixed;
-        top: 56px;
-        left: 0;
-        right: 0;
-        z-index: 5;
-        background: #222;
-        padding: 10px 20px 0;
-    }
-
-    .dc-header-inner {
-        max-width: 1920px;
-        margin: 0 auto;
-    }
-
-    .dc-header h1 {
-        font-size: 1.3rem;
-        font-weight: 700;
-        text-align: center;
-        margin-bottom: 8px;
-        color: #FFD700;
-    }
-
-    .dc-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 10px 20px 40px;
-        margin-top: 145px;
-    }
-
-    /* Tabs */
-    .dc-tabs {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 6px;
-        margin-bottom: 0;
-        padding: 0 0 10px;
-    }
-
-    .dc-tab {
-        padding: 8px 18px;
-        border: none;
-        border-radius: 6px;
-        background: #444;
-        color: #aaa;
-        font-size: 0.9rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.15s ease, color 0.15s ease;
-        min-height: 48px;
-        min-width: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-    }
-
-    .dc-tab:hover {
-        background: #555;
-        color: #ddd;
-    }
-
-    .dc-tab.active {
-        background: #3C6090;
-        color: #fff;
-    }
-
-    /* Tab panels */
-    .dc-panel {
-        display: none;
-    }
-
-    .dc-panel.active {
-        display: block;
-    }
-
-    /* Group header (floor/area) */
-    /* Group panel: wraps heading + device grid */
-    .dc-group-panel {
-        background: #2a2a2a;
-        border: 1px solid #444;
-        border-radius: 8px;
-        padding: 14px 16px 16px;
-        margin-bottom: 14px;
-    }
-
-    .dc-group-header {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #FFD700;
-        margin: 0 0 10px;
-        padding-bottom: 6px;
-        border-bottom: 1px solid #444;
-    }
-
-    /* Room sub-panel (lights tab) */
-    .dc-room-panel {
-        background: #333;
-        border: 1px solid #444;
-        border-radius: 6px;
-        padding: 10px 12px 12px;
-        margin-top: 10px;
-    }
-
-    .dc-room-header {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: #aaa;
-        margin: 0 0 8px 2px;
-    }
-
-    /* Scroll hint: fade gradient + bouncing chevron */
-    .scroll-hint {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 80px;
-        background: linear-gradient(transparent, #222);
-        display: flex;
-        justify-content: center;
-        align-items: flex-end;
-        padding-bottom: 10px;
-        pointer-events: none;
-        z-index: 10;
-        transition: opacity 0.4s ease;
-    }
-
-    .scroll-hint.hidden {
-        opacity: 0;
-    }
-
-    .scroll-hint i {
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 24px;
-        animation: bounce 1.5s infinite;
-    }
-
-    @keyframes bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-8px); }
-    }
-
-    /* Failure flash on card */
-    .dc-card.action-failed {
-        box-shadow: 0 0 0 2px #f44336;
-    }
-
-    .dc-fail-badge {
-        position: absolute;
-        top: 4px;
-        right: 4px;
-        color: #f44336;
-        font-size: 0.85rem;
-    }
-
-    /* Device cards */
-    .dc-device-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 10px;
-        margin-bottom: 6px;
-    }
-
-    .dc-card {
-        position: relative;
-        background: #333;
-        border-radius: 8px;
-        display: flex;
-        flex-direction: row;
-        overflow: hidden;
-        border: 2px solid rgba(255,255,255,0.15);
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        transition: box-shadow 0.15s ease;
-    }
-
-    .dc-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    }
-
-    .dc-card-icon-col {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 52px;
-        min-width: 52px;
-        background: #2a2a2a;
-        border-right: 1px solid #444;
-    }
-
-    .dc-card-body {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        padding: 10px 12px;
-        min-width: 0;
-    }
-
-    .dc-card-icon {
-        font-size: 1.4rem;
-        color: #888;
-    }
-
-    .dc-card-icon.state-on {
-        color: #FFD700;
-    }
-
-    .dc-card-name {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #ddd;
-    }
-
-    .dc-card-icon.state-unavailable {
-        color: #f44336;
-    }
-
-    /* Action buttons */
-    .dc-actions {
-        display: flex;
-        gap: 6px;
-    }
-
-    .dc-btn {
-        flex: 1;
-        padding: 8px 6px;
-        border: none;
-        border-radius: 6px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.15s ease, opacity 0.15s ease;
-        min-height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-    }
-
-    .dc-btn:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
-
-    .dc-btn-action {
-        background: #3C6090;
-        color: #fff;
-    }
-    .dc-btn-action:hover:not(:disabled) { background: #4a75ab; }
-
-    .dc-btn-action.action-off {
-        background: #7a2d2d;
-    }
-    .dc-btn-action.action-off:hover:not(:disabled) { background: #953838; }
-
-    .dc-btn-action.action-on {
-        background: #2d7a3a;
-    }
-    .dc-btn-action.action-on:hover:not(:disabled) { background: #38954a; }
-
-    /* Toggle switch (square style matching sliders) */
-    .dc-toggle {
-        position: relative;
-        display: inline-block;
-        width: 56px;
-        height: 30px;
-        flex-shrink: 0;
-    }
-
-    .dc-toggle input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-    .dc-toggle-track {
-        position: absolute;
-        cursor: pointer;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: #555;
-        border-radius: 4px;
-        border: 1px solid #666;
-        transition: background 0.25s ease;
-    }
-
-    .dc-toggle-track::after {
-        content: '';
-        position: absolute;
-        width: 24px;
-        height: 24px;
-        left: 3px;
-        bottom: 2px;
-        background: #ccc;
-        border-radius: 4px;
-        transition: transform 0.25s ease, background 0.25s ease;
-    }
-
-    .dc-toggle input:checked + .dc-toggle-track {
-        background: #D4A843;
-        border-color: #D4A843;
-    }
-
-    .dc-toggle input:checked + .dc-toggle-track::after {
-        transform: translateX(26px);
-        background: #fff;
-    }
-
-    .dc-toggle input:disabled + .dc-toggle-track {
-        opacity: 0.3;
-        cursor: not-allowed;
-    }
-
-    .dc-toggle-label {
-        font-size: 0.7rem;
-        color: #999;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        min-width: 24px;
-    }
-
-    .dc-toggle-label.is-on {
-        color: #D4A843;
-    }
-
-    .dc-toggle-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .dc-btn-open {
-        background: #2d7a3a;
-        color: #fff;
-    }
-    .dc-btn-open:hover:not(:disabled) { background: #38954a; }
-
-    .dc-btn-close {
-        background: #7a2d2d;
-        color: #fff;
-    }
-    .dc-btn-close:hover:not(:disabled) { background: #953838; }
-
-    .dc-btn-stop {
-        background: #8a6d1b;
-        color: #fff;
-    }
-    .dc-btn-stop:hover:not(:disabled) { background: #a6831f; }
-
-    /* Cover position slider (inherits shared slider base) */
-    .dc-cover-slider-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    /* Scenes tab */
-    .sc-msg {
-        text-align: center;
-        padding: 40px;
-        color: #888;
-    }
-
-    .sc-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 12px;
-    }
-
-    .sc-btn {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        min-height: 110px;
-        padding: 14px 10px;
-        background: #333;
-        color: #ddd;
-        border: 2px solid rgba(255,255,255,0.15);
-        border-radius: 8px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.15s ease, border-color 0.15s ease;
-    }
-
-    .sc-btn i {
-        font-size: 1.8rem;
-        color: #FFD700;
-    }
-
-    .sc-btn:hover { background: #3a3a3a; }
-    .sc-btn.pending { opacity: 0.6; pointer-events: none; }
-    .sc-btn.done { border-color: #4caf50; }
-    .sc-btn.failed { border-color: #f44336; }
-
-    /* Loading spinner */
-    .dc-loading {
-        text-align: center;
-        padding: 40px;
-        color: #888;
-    }
-
-    .dc-loading i {
-        font-size: 2rem;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-
-    /* Pending action indicator */
-    .dc-card.pending {
-        opacity: 0.6;
-        pointer-events: none;
-    }
-
-    /* All-controls row */
-    .dc-all-controls {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 12px;
-        justify-content: center;
-    }
-
-    .dc-all-btn {
-        padding: 8px 20px;
-        border: none;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        cursor: pointer;
-        min-height: 44px;
-        transition: background 0.15s ease;
-    }
-
-    .dc-all-btn-on {
-        background: #2d7a3a;
-        color: #fff;
-    }
-    .dc-all-btn-on:hover { background: #38954a; }
-
-    .dc-all-btn-off {
-        background: #7a2d2d;
-        color: #fff;
-    }
-    .dc-all-btn-off:hover { background: #953838; }
-
-    .dc-all-btn-open {
-        background: #2d7a3a;
-        color: #fff;
-    }
-    .dc-all-btn-open:hover { background: #38954a; }
-
-    .dc-all-btn-close {
-        background: #7a2d2d;
-        color: #fff;
-    }
-    .dc-all-btn-close:hover { background: #953838; }
-
-    /* Active-only filter toggle (sticky, below tabs) */
-    .dc-filter-bar {
-        display: flex;
-        justify-content: center;
-        padding: 8px 0 4px;
-    }
-
-    .dc-filter-bar.hidden {
-        display: none;
-    }
-
-    .dc-filter-btn {
-        background: #444;
-        color: #aaa;
-        border: 1px solid #555;
-        border-radius: 6px;
-        padding: 6px 14px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .dc-filter-btn:hover {
-        background: #555;
-        color: #ddd;
-    }
-
-    .dc-filter-btn.active {
-        background: #D4A843;
-        color: #1a1a2e;
-        border-color: #D4A843;
-    }
-
-    .dc-card.filter-hidden {
-        display: none !important;
-    }
-
-    .dc-room-header.filter-hidden,
-    .dc-group-header.filter-hidden {
-        display: none !important;
-    }
-
-    /* Shared slider base (brightness + cover) */
-    .dc-slider-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .dc-brightness-slider,
-    .dc-cover-slider {
-        flex: 1;
-        -webkit-appearance: none;
-        appearance: none;
-        height: 32px;
-        border-radius: 4px;
-        background: #444;
-        outline: none;
-        cursor: pointer;
-        border: 1px solid #555;
-    }
-
-    .dc-brightness-slider::-webkit-slider-thumb,
-    .dc-cover-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 28px;
-        height: 40px;
-        border-radius: 4px;
-        background: #FFD700;
-        cursor: pointer;
-        border: 2px solid #333;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-    }
-
-    .dc-brightness-slider::-moz-range-thumb,
-    .dc-cover-slider::-moz-range-thumb {
-        width: 28px;
-        height: 40px;
-        border-radius: 4px;
-        background: #FFD700;
-        cursor: pointer;
-        border: 2px solid #333;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-    }
-
-    .dc-brightness-slider::-webkit-slider-runnable-track,
-    .dc-cover-slider::-webkit-slider-runnable-track {
-        height: 32px;
-        border-radius: 4px;
-    }
-
-    .dc-brightness-slider::-moz-range-track,
-    .dc-cover-slider::-moz-range-track {
-        height: 32px;
-        border-radius: 4px;
-        background: #444;
-        border: 1px solid #555;
-    }
-
-    .dc-brightness-slider:disabled,
-    .dc-cover-slider:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-    }
-
-    .dc-brightness-slider:disabled::-webkit-slider-thumb,
-    .dc-cover-slider:disabled::-webkit-slider-thumb {
-        background: #888;
-    }
-
-    /* Cover slider thumb color override */
-    .dc-cover-slider::-webkit-slider-thumb {
-        background: #6BA4E0;
-    }
-    .dc-cover-slider::-moz-range-thumb {
-        background: #6BA4E0;
-    }
-
-    .dc-off-btn {
-        background: #7a2d2d;
-        color: #fff;
-        border: none;
-        border-radius: 6px;
-        padding: 6px 10px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        cursor: pointer;
-        min-height: 32px;
-        min-width: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.15s ease;
-    }
-
-    .dc-off-btn:hover:not(:disabled) { background: #953838; }
-    .dc-off-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    .dc-off-btn.state-off {
-        background: #555;
-    }
-
-    /* Power-cycle button */
-    .dc-powercycle-btn {
-        background: #5a3d8a;
-        color: #fff;
-        border: none;
-        border-radius: 6px;
-        padding: 4px 10px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        cursor: pointer;
-        min-height: 30px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
-        transition: background 0.15s ease, opacity 0.15s ease;
-        white-space: nowrap;
-    }
-
-    .dc-powercycle-btn:hover:not(:disabled) { background: #6f4fa6; }
-    .dc-powercycle-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-    .dc-powercycle-btn.cycling {
-        background: #8a6d1b;
-        pointer-events: none;
-    }
-
-    .dc-powercycle-countdown {
-        display: inline-block;
-        font-size: 0.75rem;
-        font-weight: 700;
-        min-width: 18px;
-        text-align: center;
-    }
+    body.dc-page {
+        --accent: #7cc4ff;
+        --warm: #ffc36b;
+        --warm-2: #ff9f43;
+        --danger: #ff6b6b;
+        --glass: linear-gradient(160deg, rgba(255,255,255,.12), rgba(255,255,255,.035));
+        --line: rgba(255,255,255,.11);
+        background: radial-gradient(ellipse 120% 80% at 50% 0%, #1d3350 0%, #0c1622 55%, #060a10 100%) fixed;
+        color: #e8eef5;
+    }
+
+    .dc-stage { position: relative; z-index: 1; max-width: 1500px; margin: 0 auto; padding: 1.5rem 1.25rem 7rem; }
+
+    /* ── Brand header ── */
+    .dc-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.1rem; }
+    .dc-brand { display: flex; align-items: center; gap: .9rem; }
+    .dc-brand img { width: 56px; height: auto; }
+    .dc-brand-name { letter-spacing: .28em; font-weight: 600; font-size: 1.1rem; }
+    .dc-brand-sub { letter-spacing: .35em; font-size: .7rem; opacity: .55; margin-top: .15rem; }
+    .dc-title-wrap { text-align: right; }
+    .dc-title { font-weight: 300; letter-spacing: .06em; font-size: clamp(1.6rem, 3.2vw, 2.4rem); margin: 0; }
+    .dc-summary { display: inline-flex; align-items: center; gap: .45rem; margin-top: .3rem; padding: .15rem .75rem; border-radius: 999px;
+                  font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; background: rgba(255,255,255,.1); color: var(--accent); }
+    .dc-summary.has-on { color: var(--warm); }
+
+    /* ── Sticky tab bar ── */
+    .dc-bar { position: sticky; top: 62px; z-index: 5; display: flex; align-items: center; gap: .75rem; margin: 0 0 1.25rem;
+              padding: .55rem; border-radius: 30px; background: rgba(10,18,30,.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+              border: 1px solid rgba(255,255,255,.08); box-shadow: 0 12px 34px rgba(0,0,0,.35); }
+    .dc-tabs { flex: 1; display: flex; flex-wrap: wrap; gap: .4rem; }
+        .dc-tab { position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: .5rem; min-height: 48px; min-width: 48px;
+              padding: 0 1.1rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.05);
+              color: rgba(232,238,245,.7); font-size: .9rem; font-weight: 500; letter-spacing: .02em; cursor: pointer;
+              transition: background .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease; }
+    .dc-tab i { color: var(--accent); opacity: .8; }
+    .dc-tab:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .dc-tab.active { background: linear-gradient(160deg, rgba(124,196,255,.34), rgba(124,196,255,.14)); border-color: rgba(124,196,255,.45);
+                     color: #fff; box-shadow: 0 6px 20px rgba(124,196,255,.18); }
+    .dc-tab.active i { color: #fff; opacity: 1; }
+    .dc-tab-count { min-width: 1.35rem; height: 1.35rem; padding: 0 .35rem; border-radius: 999px; background: rgba(255,195,107,.22); color: var(--warm);
+                    font-size: .72rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+    .dc-tab-count[hidden] { display: none; }
+
+    /* Active-only filter */
+    .dc-filter-bar { flex-shrink: 0; display: flex; align-self: flex-start; }
+    .dc-filter-bar.hidden { display: none; }
+    .dc-filter-btn { display: flex; align-items: center; gap: .5rem; min-height: 44px; padding: 0 1rem; border-radius: 999px; cursor: pointer;
+                     background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: rgba(232,238,245,.7);
+                     font-size: .8rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; transition: all .2s ease; }
+    .dc-filter-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .dc-filter-btn.active { background: linear-gradient(160deg, var(--warm), var(--warm-2)); border-color: transparent; color: #241504;
+                            box-shadow: 0 6px 18px rgba(255,159,67,.3); }
+
+    .dc-container { position: relative; }
+    .dc-panel { display: none; animation: dc-fade .25s ease; }
+    .dc-panel.active { display: block; }
+    @keyframes dc-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    /* ── Floor / area cards ── */
+    .dc-group-panel { background: var(--glass); border: 1px solid var(--line); border-radius: 22px; padding: 1.15rem 1.35rem 1.35rem;
+                      margin-bottom: 1.25rem; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 18px 44px rgba(0,0,0,.3); }
+    .dc-group-header { display: flex; align-items: center; gap: .6rem; margin: 0 0 .9rem; font-size: .8rem; font-weight: 600;
+                       letter-spacing: .2em; text-transform: uppercase; color: rgba(232,238,245,.6); }
+    .dc-group-header::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+    /* Lights: rooms pack side by side, each sized by how many lights it has */
+    .dc-group-rooms { display: flex; flex-wrap: wrap; gap: .75rem; }
+    .dc-group-rooms > .dc-group-header { flex-basis: 100%; margin-bottom: .15rem; }
+    .dc-room-panel { flex: var(--n, 1) 1 calc(min(var(--n, 1), 4) * 300px); max-width: 100%; background: rgba(255,255,255,.035);
+                     border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: .85rem .9rem .95rem; }
+    .dc-room-panel .dc-device-grid { grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); }
+    .dc-room-header { margin: 0 0 .65rem .15rem; font-size: .72rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: rgba(232,238,245,.5); }
+
+    /* ── Device tiles ── */
+    .dc-device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .75rem; }
+
+    .dc-card { position: relative; display: flex; align-items: center; gap: .85rem; padding: .8rem .95rem; border-radius: 18px;
+               background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.08); overflow: hidden;
+               transition: background .3s ease, border-color .3s ease, box-shadow .3s ease, opacity .2s ease; }
+    .dc-card:hover { background: rgba(255,255,255,.08); }
+    .dc-card.is-on { background: linear-gradient(150deg, rgba(255,195,107,.17), rgba(255,195,107,.04)); border-color: rgba(255,195,107,.32);
+                     box-shadow: 0 10px 30px rgba(255,159,67,.12); }
+    .dc-card[data-type="cover"].is-on { background: linear-gradient(150deg, rgba(124,196,255,.17), rgba(124,196,255,.04));
+                                        border-color: rgba(124,196,255,.32); box-shadow: 0 10px 30px rgba(124,196,255,.1); }
+    .dc-card.is-unavailable { opacity: .55; }
+
+    .dc-card-icon-col { flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                        background: rgba(255,255,255,.07); transition: background .3s ease, box-shadow .3s ease; }
+    .dc-card.is-on .dc-card-icon-col { background: radial-gradient(circle, rgba(255,195,107,.45), rgba(255,159,67,.12) 70%); box-shadow: 0 0 22px rgba(255,159,67,.35); }
+    .dc-card[data-type="cover"].is-on .dc-card-icon-col { background: radial-gradient(circle, rgba(124,196,255,.4), rgba(124,196,255,.1) 70%); box-shadow: 0 0 22px rgba(124,196,255,.3); }
+    .dc-card-icon { font-size: 1.25rem; color: rgba(232,238,245,.45); transition: color .3s ease, text-shadow .3s ease; }
+    .dc-card-icon.state-on { color: #fff3dc; text-shadow: 0 0 12px rgba(255,195,107,.9); }
+    .dc-card[data-type="cover"] .dc-card-icon.state-on { color: #eaf6ff; text-shadow: 0 0 12px rgba(124,196,255,.9); }
+    .dc-card-icon.state-unavailable { color: var(--danger); text-shadow: none; }
+
+    .dc-card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .5rem; }
+    .dc-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
+    .dc-card-name { font-size: .92rem; font-weight: 500; line-height: 1.25; color: #e8eef5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .dc-card-meta { flex-shrink: 0; padding-top: .1rem; font-size: .74rem; font-weight: 600; letter-spacing: .06em; color: rgba(232,238,245,.45); font-variant-numeric: tabular-nums; }
+    .dc-card.is-on .dc-card-meta { color: var(--warm); }
+    .dc-card[data-type="cover"].is-on .dc-card-meta { color: var(--accent); }
+
+    .dc-actions { display: flex; align-items: center; gap: .5rem; }
+    .dc-card.pending { opacity: .6; pointer-events: none; }
+    .dc-card.filter-hidden, .dc-room-header.filter-hidden, .dc-group-header.filter-hidden,
+    .dc-room-panel.filter-hidden, .dc-group-panel.filter-hidden { display: none !important; }
+
+    /* Failure flash */
+    .dc-card.action-failed { border-color: rgba(255,107,107,.7); box-shadow: 0 0 0 1px rgba(255,107,107,.6), 0 0 24px rgba(255,107,107,.25); }
+    .dc-fail-badge { position: absolute; top: 8px; right: 10px; color: var(--danger); font-size: .85rem; }
+
+    /* ── Pill sliders (brightness + cover) ── */
+    .dc-slider-row, .dc-cover-slider-row { display: flex; align-items: center; gap: .55rem; flex: 1; }
+    .dc-brightness-slider, .dc-cover-slider {
+        --fill: 0%;
+        --fill-color: rgba(255,195,107,.85);
+        flex: 1; min-width: 0; height: 34px; margin: 0; -webkit-appearance: none; appearance: none; cursor: pointer; outline: none;
+        border-radius: 999px; border: 1px solid rgba(255,255,255,.1);
+        background: linear-gradient(90deg, var(--fill-color) 0, var(--fill-color) var(--fill), rgba(255,255,255,.08) var(--fill), rgba(255,255,255,.08) 100%);
+    }
+    .dc-brightness-slider { --fill-color: rgba(255,182,90,.8); }
+    .dc-cover-slider { --fill-color: rgba(124,196,255,.65); }
+    .dc-brightness-slider::-webkit-slider-runnable-track, .dc-cover-slider::-webkit-slider-runnable-track { height: 34px; background: transparent; border-radius: 999px; }
+    .dc-brightness-slider::-moz-range-track, .dc-cover-slider::-moz-range-track { height: 34px; background: transparent; border: none; }
+    .dc-brightness-slider::-webkit-slider-thumb, .dc-cover-slider::-webkit-slider-thumb {
+        -webkit-appearance: none; appearance: none; width: 30px; height: 30px; margin-top: 1px; border-radius: 50%; cursor: pointer;
+        background: #fff; border: none; box-shadow: 0 2px 8px rgba(0,0,0,.45), 0 0 0 4px rgba(255,255,255,.12);
+    }
+    .dc-brightness-slider::-moz-range-thumb, .dc-cover-slider::-moz-range-thumb {
+        width: 30px; height: 30px; border-radius: 50%; cursor: pointer; background: #fff; border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,.45), 0 0 0 4px rgba(255,255,255,.12);
+    }
+    .dc-brightness-slider:disabled, .dc-cover-slider:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* Round power button next to dimmer */
+    .dc-off-btn { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                  border: 1px solid rgba(255,107,107,.45); background: rgba(255,107,107,.16); color: #ffb0b0; font-size: .9rem; cursor: pointer;
+                  transition: all .2s ease; }
+    .dc-off-btn:hover:not(:disabled) { background: rgba(255,107,107,.3); color: #fff; }
+    .dc-off-btn.state-off { border-color: rgba(255,255,255,.08); background: rgba(255,255,255,.05); color: rgba(232,238,245,.35); }
+    .dc-off-btn:disabled { cursor: not-allowed; }
+
+    /* ── Pill toggle ── */
+    .dc-toggle-wrapper { display: flex; align-items: center; gap: .6rem; }
+    .dc-toggle { position: relative; display: inline-block; width: 58px; height: 32px; flex-shrink: 0; margin: 0; }
+    .dc-toggle input { opacity: 0; width: 0; height: 0; }
+    .dc-toggle-track { position: absolute; inset: 0; cursor: pointer; border-radius: 999px; background: rgba(255,255,255,.1);
+                       border: 1px solid rgba(255,255,255,.12); transition: background .25s ease, border-color .25s ease, box-shadow .25s ease; }
+    .dc-toggle-track::after { content: ''; position: absolute; width: 26px; height: 26px; left: 2px; top: 2px; border-radius: 50%;
+                              background: #cfd8e3; box-shadow: 0 2px 6px rgba(0,0,0,.4); transition: transform .25s ease, background .25s ease; }
+    .dc-toggle input:checked + .dc-toggle-track { background: linear-gradient(160deg, var(--warm), var(--warm-2)); border-color: transparent;
+                                                  box-shadow: 0 0 16px rgba(255,159,67,.35); }
+    .dc-toggle input:checked + .dc-toggle-track::after { transform: translateX(26px); background: #fff; }
+    .dc-toggle input:disabled + .dc-toggle-track { opacity: .3; cursor: not-allowed; }
+    .dc-toggle-label { min-width: 2rem; font-size: .7rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: rgba(232,238,245,.45); }
+    .dc-toggle-label.is-on { color: var(--warm); }
+
+    /* Power-cycle (TV sockets) */
+    .dc-powercycle-btn { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; min-height: 36px; padding: 0 .85rem;
+                         border-radius: 999px; border: 1px solid rgba(196,181,253,.35); background: rgba(167,139,250,.16); color: #d6ccff;
+                         font-size: .75rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .2s ease; }
+    .dc-powercycle-btn:hover:not(:disabled) { background: rgba(167,139,250,.3); color: #fff; }
+    .dc-powercycle-btn:disabled { opacity: .3; cursor: not-allowed; }
+    .dc-powercycle-btn.cycling { background: rgba(255,195,107,.22); border-color: rgba(255,195,107,.45); color: var(--warm); pointer-events: none; }
+    .dc-powercycle-countdown { display: inline-block; min-width: 18px; text-align: center; font-weight: 700; }
+
+    /* ── Scenes ── */
+    .sc-msg { text-align: center; padding: 3rem 1rem; color: rgba(232,238,245,.55); }
+    .sc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 1rem; }
+    .sc-btn { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .9rem; min-height: 150px;
+              padding: 1.25rem 1rem; border-radius: 22px; border: 1px solid var(--line); background: var(--glass); color: #e8eef5;
+              font-size: 1rem; font-weight: 500; letter-spacing: .03em; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+              box-shadow: 0 18px 44px rgba(0,0,0,.28); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease; }
+    .sc-btn i { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #fff3dc;
+                background: radial-gradient(circle, rgba(255,195,107,.4), rgba(255,159,67,.1) 70%); box-shadow: 0 0 26px rgba(255,159,67,.25); }
+    .sc-btn:hover { transform: translateY(-3px); border-color: rgba(255,195,107,.35); box-shadow: 0 22px 50px rgba(0,0,0,.35), 0 0 30px rgba(255,159,67,.12); }
+    .sc-btn:active { transform: scale(.98); }
+    .sc-btn.pending { opacity: .6; pointer-events: none; }
+    .sc-btn.done { border-color: rgba(108,229,152,.6); box-shadow: 0 0 0 1px rgba(108,229,152,.45), 0 0 30px rgba(108,229,152,.2); }
+    .sc-btn.failed { border-color: rgba(255,107,107,.6); box-shadow: 0 0 0 1px rgba(255,107,107,.45), 0 0 30px rgba(255,107,107,.2); }
+
+    /* Loading */
+    .dc-loading { text-align: center; padding: 3rem 1rem; color: rgba(232,238,245,.5); }
+    .dc-loading i { font-size: 2rem; color: var(--accent); animation: spin 1s linear infinite; }
+    .dc-loading p { margin-top: .75rem; letter-spacing: .12em; text-transform: uppercase; font-size: .75rem; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* Scroll hint */
+    .scroll-hint { position: fixed; bottom: 0; left: 0; width: 100%; height: 80px; background: linear-gradient(transparent, #060a10);
+                   display: flex; justify-content: center; align-items: flex-end; padding-bottom: 10px; pointer-events: none; z-index: 10;
+                   transition: opacity .4s ease; }
+    .scroll-hint.hidden { opacity: 0; }
+    .scroll-hint i { color: rgba(255,255,255,.55); font-size: 24px; animation: bounce 1.5s infinite; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    .dc-mountains { position: fixed; left: 0; right: 0; bottom: 0; width: 100%; height: 20vh; z-index: 0; pointer-events: none; }
 
-    /* Responsive */
     @media (max-width: 600px) {
-        .dc-device-grid {
-            grid-template-columns: 1fr;
-        }
-        .dc-tab {
-            padding: 8px 12px;
-            font-size: 0.8rem;
-        }
+        .dc-stage { padding: 1rem .9rem 6rem; }
+        .dc-bar { flex-direction: column; align-items: stretch; border-radius: 22px; }
+        .dc-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+        .dc-tabs::-webkit-scrollbar { display: none; }
+        .dc-filter-bar { align-self: flex-end; }
+        .dc-room-panel { flex-basis: 100%; }
+        .dc-title-wrap { text-align: left; }
+        .dc-brand img { width: 44px; }
+        .dc-brand-name { font-size: .95rem; }
+        .dc-device-grid { grid-template-columns: 1fr; }
+        .dc-tab { padding: 0 .85rem; font-size: .82rem; }
+        .dc-group-panel { padding: 1rem; border-radius: 18px; }
+        .sc-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+        .sc-btn { min-height: 130px; }
     }
 </style>
 
-<!-- Fixed header with tabs -->
-<div class="dc-header">
-    <div class="dc-header-inner">
-        <h1><i class="fas fa-sliders-h"></i> Controls</h1>
-        <div class="dc-tabs">
-            {% for tab in tabs %}
-            <button class="dc-tab{% if forloop.first %} active{% endif %}"
-                    onclick="switchTab('{{ tab.key }}', this)">
-                <i class="fas {{ tab.icon }}"></i>
-                {{ tab.label }}
-            </button>
-            {% endfor %}
-        </div>
-        <div class="dc-filter-bar{% if tabs.0.key != 'lights' and tabs.0.key != 'shades' %} hidden{% endif %}" id="filter-bar">
-            <button class="dc-filter-btn" id="filter-btn" onclick="toggleFilter()">
-                <i class="fas fa-filter"></i> Active only
-            </button>
+<svg class="dc-mountains" viewBox="0 0 1200 200" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 200 L0 120 L120 70 L210 110 L330 40 L430 105 L520 75 L640 130 L760 55 L880 115 L980 80 L1090 125 L1200 90 L1200 200 Z" fill="#fff" opacity=".04"/>
+    <path d="M0 200 L0 150 L150 105 L260 145 L390 95 L520 150 L660 110 L800 160 L930 120 L1060 155 L1200 125 L1200 200 Z" fill="#fff" opacity=".06"/>
+</svg>
+
+<div class="dc-stage">
+<header class="dc-header">
+    <div class="dc-brand">
+        <img src="{% static 'device_control/brand/bdl-monogram-light.svg' %}" alt="">
+        <div>
+            <div class="dc-brand-name">BLACK DIAMOND LODGE</div>
+            <div class="dc-brand-sub">SUN PEAKS · BC</div>
         </div>
     </div>
-</div>
+    <div class="dc-title-wrap">
+        <h1 class="dc-title">Controls</h1>
+        <span class="dc-summary" id="dc-summary"><i class="fas fa-circle-notch fa-spin"></i> Checking the lodge</span>
+    </div>
+</header>
 
+<!-- Sticky tab bar -->
+<div class="dc-bar">
+    <div class="dc-tabs">
+        {% for tab in tabs %}
+        <button class="dc-tab{% if forloop.first %} active{% endif %}"
+                onclick="switchTab('{{ tab.key }}', this)">
+            <i class="fas {{ tab.icon }}"></i>
+            {{ tab.label }}
+            <span class="dc-tab-count" id="tabcount-{{ tab.key }}" hidden></span>
+        </button>
+        {% endfor %}
+    </div>
+    <div class="dc-filter-bar{% if tabs.0.key != 'lights' and tabs.0.key != 'shades' %} hidden{% endif %}" id="filter-bar">
+        <button class="dc-filter-btn" id="filter-btn" onclick="toggleFilter()">
+            <i class="fas fa-filter"></i> Active only
+        </button>
+    </div>
+</div>
 <!-- Content -->
 <div class="dc-container">
     {% for tab in tabs %}
@@ -727,14 +295,14 @@
         </div>
         <div id="content-{{ tab.key }}" style="display:none;">
             {% for group_name, devices in tab.devices.items %}
-            <div class="dc-group-panel">
+            <div class="dc-group-panel{% if tab.key == "lights" %} dc-group-rooms{% endif %}">
             <div class="dc-group-header">{{ group_name }}</div>
 
             {% if tab.key == "lights" %}
                 {# Group lights by room within the floor #}
                 {% regroup devices by room as rooms %}
                 {% for room in rooms %}
-                <div class="dc-room-panel">
+                <div class="dc-room-panel" style="--n: {{ room.list|length }}">
                 <div class="dc-room-header">{{ room.grouper }}</div>
                 <div class="dc-device-grid">
                     {% for dev in room.list %}
@@ -743,7 +311,10 @@
                             <i class="fas {{ dev.icon }} dc-card-icon" id="icon-{{ dev.entity_id|cut:'.' }}"></i>
                         </div>
                         <div class="dc-card-body">
-                            <span class="dc-card-name">{{ dev.name }}</span>
+                            <div class="dc-card-top">
+                                <span class="dc-card-name">{{ dev.name }}</span>
+                                <span class="dc-card-meta" id="meta-{{ dev.entity_id|cut:'.' }}"></span>
+                            </div>
                             <div class="dc-actions">
                                 {# Slider row: shown for dimmable lights, hidden for on/off-only (swapped by JS) #}
                                 <div class="dc-slider-row" id="slider-row-{{ dev.entity_id|cut:'.' }}" style="display:none;">
@@ -781,7 +352,10 @@
                             <i class="fas {{ dev.icon }} dc-card-icon" id="icon-{{ dev.entity_id|cut:'.' }}"></i>
                         </div>
                         <div class="dc-card-body">
-                            <span class="dc-card-name">{{ dev.name }}</span>
+                            <div class="dc-card-top">
+                                <span class="dc-card-name">{{ dev.name }}</span>
+                                <span class="dc-card-meta" id="meta-{{ dev.entity_id|cut:'.' }}"></span>
+                            </div>
                             <div class="dc-cover-slider-row">
                                 <input type="range" min="0" max="100" value="0"
                                        class="dc-cover-slider"
@@ -835,6 +409,7 @@
 
     <div id="scroll-sentinel" style="height: 1px;"></div>
 </div>
+</div>{# /dc-stage #}
 
 <div class="scroll-hint" id="scroll-hint">
     <i class="fas fa-chevron-down"></i>
@@ -1082,10 +657,76 @@
                     coverSlider.disabled = isUnavailable;
                 }
             }
+
+            decorateCard(eid, info);
         }
 
+        updateSummary();
         // Re-apply active-only filters after state update
         applyFilters();
+    }
+
+    // ── Visual state: glow, readout, slider fill ──
+    function paintSlider(el) {
+        const min = +el.min || 0, max = +el.max || 100;
+        el.style.setProperty('--fill', ((el.value - min) / (max - min) * 100) + '%');
+    }
+
+    function cardIsOn(card, info) {
+        if (card.dataset.type === 'cover') {
+            const pos = info.current_position;
+            return pos != null ? pos > 5 : info.state === 'open';
+        }
+        return info.state === 'on' || info.state === 'open' || info.state === 'playing';
+    }
+
+    function decorateCard(eid, info) {
+        const safeId = eid.replace('.', '');
+        const card = document.getElementById('card-' + safeId);
+        if (!card || !info) return;
+        const unavailable = info.state === 'unavailable';
+        card.classList.toggle('is-on', !unavailable && cardIsOn(card, info));
+        card.classList.toggle('is-unavailable', unavailable);
+
+        const meta = document.getElementById('meta-' + safeId);
+        if (meta) {
+            let txt = '';
+            if (unavailable) {
+                txt = 'Unavailable';
+            } else if (card.dataset.type === 'cover') {
+                const pos = info.current_position;
+                if (pos == null) txt = (info.state || '').replace(/^./, c => c.toUpperCase());
+                else txt = pos >= 95 ? 'Open' : pos <= 5 ? 'Closed' : pos + '%';
+            } else if (info.supported_color_modes && info.supported_color_modes.includes('brightness')) {
+                txt = (info.state === 'on' && info.brightness != null)
+                    ? Math.max(1, Math.round(info.brightness / 2.55)) + '%' : 'Off';
+            }
+            meta.textContent = txt;
+        }
+        card.querySelectorAll('.dc-brightness-slider, .dc-cover-slider').forEach(paintSlider);
+    }
+
+    function updateSummary() {
+        document.querySelectorAll('.dc-panel').forEach(panel => {
+            const badge = document.getElementById('tabcount-' + panel.id.slice(6));
+            if (!badge) return;
+            const n = panel.querySelectorAll('.dc-card.is-on').length;
+            badge.textContent = n;
+            badge.hidden = n === 0;
+        });
+
+        const count = key => document.querySelectorAll('#content-' + key + ' .dc-card.is-on').length;
+        const lights = count('lights'), shades = count('shades');
+        const parts = [];
+        if (lights) parts.push(lights + (lights === 1 ? ' light on' : ' lights on'));
+        if (shades) parts.push(shades + (shades === 1 ? ' shade open' : ' shades open'));
+
+        const el = document.getElementById('dc-summary');
+        if (!el) return;
+        el.classList.toggle('has-on', parts.length > 0);
+        const icon = document.createElement('i');
+        icon.className = parts.length ? 'fas fa-lightbulb' : 'fas fa-moon';
+        el.replaceChildren(icon, ' ' + (parts.length ? parts.join(' · ') : 'All lights off'));
     }
 
     // ── Active-only filter ──
@@ -1121,6 +762,11 @@
                     if (header && (header.classList.contains('dc-room-header') || header.classList.contains('dc-group-header'))) {
                         header.classList.toggle('filter-hidden', visibleCards.length === 0);
                     }
+                    const room = grid.closest('.dc-room-panel');
+                    if (room) room.classList.toggle('filter-hidden', visibleCards.length === 0);
+                });
+                panel.querySelectorAll('.dc-group-panel').forEach(group => {
+                    group.classList.toggle('filter-hidden', !group.querySelector('.dc-card:not(.filter-hidden)'));
                 });
             } else {
                 panel.querySelectorAll('.filter-hidden').forEach(el => el.classList.remove('filter-hidden'));
@@ -1347,7 +993,10 @@
                         offBtn.disabled = val === 0;
                         offBtn.classList.toggle('state-off', val === 0);
                     }
+                    decorateCard(entityId, entityStates[entityId]);
+                    updateSummary();
                 }
+                paintSlider(slider);
 
                 // Debounce: send to HA 300ms after the user stops sliding
                 sliderTimers[entityId] = setTimeout(() => {
@@ -1391,7 +1040,10 @@
                         else if (val <= 5) iconEl.classList.add('fa-square');
                         else iconEl.classList.add('fa-bars');
                     }
+                    decorateCard(entityId, entityStates[entityId]);
+                    updateSummary();
                 }
+                paintSlider(slider);
 
                 sliderTimers[entityId] = setTimeout(() => {
                     sendCoverPosition(entityId, val);

@@ -24,32 +24,32 @@
 
 #panel-gemstone .gem-pill {
     display: flex; align-items: center; gap: 10px;
-    background: #2a2a2a; border: 1px solid #444; border-radius: 12px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.11); border-radius: 12px;
     padding: 10px 16px 10px 12px; cursor: pointer; min-width: 200px;
     transition: border-color .15s, background .15s;
 }
-#panel-gemstone .gem-pill:hover { border-color: #555; background: #2f2f2f; }
+#panel-gemstone .gem-pill:hover { border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.1); }
 #panel-gemstone .gem-pill.active {
-    border-color: #7c4dff; background: #262033;
+    border-color: #a78bfa; background: rgba(167,139,250,.14);
     box-shadow: 0 0 10px rgba(124, 77, 255, .3);
 }
 #panel-gemstone .gem-pill .pill-ic {
-    width: 34px; height: 34px; border-radius: 9px; background: #1f1f1f;
+    width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.06);
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.05rem; color: #666; border: 1px solid #3a3a3a; flex-shrink: 0;
+    font-size: 1.05rem; color: rgba(232,238,245,.4); border: 1px solid rgba(255,255,255,.08); flex-shrink: 0;
 }
 #panel-gemstone .gem-pill.on .pill-ic {
-    color: #b39dff; background: #241a33;
+    color: #d6ccff; background: rgba(167,139,250,.2);
     box-shadow: 0 0 10px rgba(124, 77, 255, .4);
 }
 #panel-gemstone .gem-pill .pill-txt { min-width: 0; }
-#panel-gemstone .gem-pill .pill-txt b { font-size: .92rem; color: #eee; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#panel-gemstone .gem-pill .pill-txt span { font-size: .72rem; color: #999; }
+#panel-gemstone .gem-pill .pill-txt b { font-size: .92rem; color: #e8eef5; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#panel-gemstone .gem-pill .pill-txt span { font-size: .72rem; color: rgba(232,238,245,.55); }
 
 /* Selected device detail card (full width) */
 #panel-gemstone .gem-card {
-    background: #2a2a2a;
-    border: 1px solid #444;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.11);
     border-radius: 14px;
     padding: 16px;
     display: flex;
@@ -57,36 +57,36 @@
     gap: 14px;
     transition: border-color .15s, background .15s;
 }
-#panel-gemstone .gem-card.on { border-color: #7c4dff; background: #262033; }
+#panel-gemstone .gem-card.on { border-color: #a78bfa; background: rgba(167,139,250,.14); }
 
 /* Header: icon + name/status + power */
 #panel-gemstone .gem-head { display: flex; align-items: center; gap: 12px; }
 #panel-gemstone .gem-ic {
-    width: 40px; height: 40px; border-radius: 10px; background: #1f1f1f;
+    width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.06);
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.2rem; color: #666; border: 1px solid #3a3a3a; flex-shrink: 0;
+    font-size: 1.2rem; color: rgba(232,238,245,.4); border: 1px solid rgba(255,255,255,.08); flex-shrink: 0;
 }
 #panel-gemstone .gem-card.on .gem-ic {
-    color: #b39dff; background: #241a33;
+    color: #d6ccff; background: rgba(167,139,250,.2);
     box-shadow: 0 0 12px rgba(124, 77, 255, .45);
 }
 #panel-gemstone .gem-meta { flex: 1; min-width: 0; }
-#panel-gemstone .gem-meta b { font-size: 1rem; color: #eee; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#panel-gemstone .gem-meta span { font-size: .76rem; color: #999; }
+#panel-gemstone .gem-meta b { font-size: 1rem; color: #e8eef5; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#panel-gemstone .gem-meta span { font-size: .76rem; color: rgba(232,238,245,.55); }
 
 #panel-gemstone .dot { font-size: .5rem; vertical-align: middle; margin-right: 5px; }
-#panel-gemstone .dot.online { color: #4caf50; }
-#panel-gemstone .dot.offline { color: #f44336; }
+#panel-gemstone .dot.online { color: #6ce598; }
+#panel-gemstone .dot.offline { color: #ff6b6b; }
 
 /* Power button */
 #panel-gemstone .gem-power {
     width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
-    background: #1f1f1f; border: 1px solid #444; color: #777;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.11); color: rgba(232,238,245,.5);
     font-size: 1.05rem; cursor: pointer; transition: all .15s;
 }
-#panel-gemstone .gem-power:hover:not(:disabled) { border-color: #7c4dff; color: #b39dff; }
+#panel-gemstone .gem-power:hover:not(:disabled) { border-color: #a78bfa; color: #d6ccff; }
 #panel-gemstone .gem-power.on {
-    background: #7c4dff; border-color: #7c4dff; color: #fff;
+    background: #a78bfa; border-color: #a78bfa; color: #fff;
     box-shadow: 0 0 12px rgba(124, 77, 255, .5);
 }
 #panel-gemstone .gem-power:disabled { opacity: .4; cursor: not-allowed; }
@@ -94,9 +94,9 @@
 /* Current pattern strip */
 #panel-gemstone .gem-current {
     display: flex; align-items: center; gap: 10px;
-    padding: 8px 10px; background: #1d1d1d; border-radius: 10px; border: 1px solid #383838;
+    padding: 8px 10px; background: rgba(255,255,255,.05); border-radius: 10px; border: 1px solid rgba(255,255,255,.08);
 }
-#panel-gemstone .gem-current > span { font-size: .82rem; color: #ddd; font-weight: 600; }
+#panel-gemstone .gem-current > span { font-size: .82rem; color: #e8eef5; font-weight: 600; }
 
 /* Pattern picker — dynamic columns (~8 on a 1920px display) */
 #panel-gemstone .gem-pats {
@@ -106,16 +106,16 @@
 }
 #panel-gemstone .gem-pat {
     display: flex; flex-direction: column; align-items: stretch; gap: 6px;
-    background: #1f1f1f; border: 1px solid #3a3a3a; border-radius: 10px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); border-radius: 10px;
     padding: 8px; cursor: pointer; text-align: left; transition: all .15s;
 }
-#panel-gemstone .gem-pat:hover:not(:disabled) { border-color: #555; background: #262626; }
-#panel-gemstone .gem-pat.active { border-color: #7c4dff; background: #241a33; box-shadow: 0 0 8px rgba(124, 77, 255, .35); }
+#panel-gemstone .gem-pat:hover:not(:disabled) { border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.09); }
+#panel-gemstone .gem-pat.active { border-color: #a78bfa; background: rgba(167,139,250,.2); box-shadow: 0 0 8px rgba(124, 77, 255, .35); }
 #panel-gemstone .gem-pat:disabled { opacity: .45; cursor: not-allowed; }
 #panel-gemstone .gem-pat-name {
-    font-size: .76rem; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-size: .76rem; color: #e8eef5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-#panel-gemstone .gem-pat-name .fa-star { color: #FFD700; font-size: .68rem; }
+#panel-gemstone .gem-pat-name .fa-star { color: #ffc36b; font-size: .68rem; }
 
 /* Colour swatches */
 #panel-gemstone .gem-swatches { display: flex; gap: 3px; flex-wrap: nowrap; overflow: hidden; }
@@ -123,8 +123,8 @@
 #panel-gemstone .gem-current .gem-sw { width: 16px; height: 16px; }
 
 /* Empty / message states */
-#panel-gemstone .gem-empty { font-size: .8rem; color: #888; padding: 8px 2px; }
+#panel-gemstone .gem-empty { font-size: .8rem; color: rgba(232,238,245,.5); padding: 8px 2px; }
 #panel-gemstone .gem-msg {
-    text-align: center; color: #aaa; font-size: 1rem; padding: 60px 20px;
+    text-align: center; color: rgba(232,238,245,.6); font-size: 1rem; padding: 60px 20px;
 }
-#panel-gemstone .gem-msg i { margin-right: 8px; color: #7c4dff; }
+#panel-gemstone .gem-msg i { margin-right: 8px; color: #a78bfa; }
