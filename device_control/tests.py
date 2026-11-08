@@ -708,3 +708,11 @@ class HomepageHookTests(TestCase):
         from device_control.homepage import run_shortcut
         run_shortcut("fireplaces_off")
         mock_call.assert_called_once_with("climate", "turn_off", "climate.living")
+
+    def test_fireplaces_off_offered_only_while_one_is_lit(self):
+        from device_control.homepage import shortcuts
+        self.assertEqual([s.title for s in shortcuts()], ["Fireplaces off"])
+        unlit = [dict(s, state="off") if s["entity_id"].startswith("climate.") else s
+                 for s in self.STATES]
+        with patch("device_control.homepage.get_all_states", return_value=unlit):
+            self.assertEqual(shortcuts(), [])

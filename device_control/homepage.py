@@ -53,7 +53,7 @@ def status():
 
 def shortcuts():
     fireplaces = _fireplaces()
-    if not fireplaces:
+    if not any(_is_on(s) for s in fireplaces):
         return []
     return [
         Shortcut(
