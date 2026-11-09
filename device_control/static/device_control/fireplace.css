@@ -6,8 +6,8 @@
 
 /* Fill the viewport below the fixed header so the card's firebox has height.
    The parents (.dc-container/.dc-panel) are plain block flow with no height,
-   so the flex chain needs an explicit min-height; the 285px offset keeps a
-   1080p display free of vertical scroll. */
+   so the flex chain needs an explicit min-height. When the tab is active,
+   fitFireplace() in the template sets an exact height so it never scrolls. */
 #panel-fireplace .fp-wrap { display: flex; flex-direction: column; min-height: max(520px, calc(100vh - 330px)); }
 
 /* Fireplace selector pills (only rendered when >1 fireplace) */
