@@ -16,6 +16,7 @@
         --danger: #ff6b6b;
         --glass: linear-gradient(160deg, rgba(255,255,255,.12), rgba(255,255,255,.035));
         --line: rgba(255,255,255,.11);
+        --hub-scroll-hint-bg: #060a10;
         background: radial-gradient(ellipse 120% 80% at 50% 0%, #1d3350 0%, #0c1622 55%, #060a10 100%) fixed;
         color: #e8eef5;
     }
@@ -23,7 +24,6 @@
     .dc-stage { position: relative; z-index: 1; max-width: 1500px; margin: 0 auto; padding: 1rem 1.25rem 7rem; }
     /* Fireplace tab fits the viewport: no bottom padding, card sized by JS */
     body.dc-fit .dc-stage { padding-bottom: 1rem; }
-    body.dc-fit .scroll-hint { display: none; }
 
     /* ── Sticky tab bar ── */
     .dc-bar { position: sticky; top: 62px; z-index: 5; display: flex; align-items: center; gap: .75rem; margin: 0 0 1.25rem;
@@ -186,14 +186,6 @@
     .dc-loading i { font-size: 2rem; color: var(--accent); animation: spin 1s linear infinite; }
     .dc-loading p { margin-top: .75rem; letter-spacing: .12em; text-transform: uppercase; font-size: .75rem; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-    /* Scroll hint */
-    .scroll-hint { position: fixed; bottom: 0; left: 0; width: 100%; height: 80px; background: linear-gradient(transparent, #060a10);
-                   display: flex; justify-content: center; align-items: flex-end; padding-bottom: 10px; pointer-events: none; z-index: 10;
-                   transition: opacity .4s ease; }
-    .scroll-hint.hidden { opacity: 0; }
-    .scroll-hint i { color: rgba(255,255,255,.55); font-size: 24px; animation: bounce 1.5s infinite; }
-    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
     .dc-mountains { position: fixed; left: 0; right: 0; bottom: 0; width: 100%; height: 20vh; z-index: 0; pointer-events: none; }
 
@@ -405,13 +397,8 @@
     </div>
     {% endfor %}
 
-    <div id="scroll-sentinel" style="height: 1px;"></div>
 </div>
 </div>{# /dc-stage #}
-
-<div class="scroll-hint" id="scroll-hint">
-    <i class="fas fa-chevron-down"></i>
-</div>
 
 <script>
     const STATES_URL = "{% url 'device_control_states' %}";
@@ -444,20 +431,6 @@
     let filterActive = false;  // global active-only filter
     const FILTERABLE_TABS = new Set(['lights', 'shades']);
 
-    // ── Scroll-hint (bouncing chevron) ──
-    const scrollHint = document.getElementById('scroll-hint');
-    const sentinel = document.getElementById('scroll-sentinel');
-    const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-            if (entry.isIntersecting) {
-                scrollHint.classList.add('hidden');
-            } else {
-                scrollHint.classList.remove('hidden');
-            }
-        });
-    }, { threshold: 0 });
-    observer.observe(sentinel);
-
     // ── Tab switching ──
     let currentTab = '{{ tabs.0.key }}';
     function switchTab(key, btn) {
@@ -476,9 +449,7 @@
 
         fitFireplace();
 
-        // Re-check scroll hint when switching tabs
-        observer.disconnect();
-        observer.observe(sentinel);
+        if (window.hubScrollHint) window.hubScrollHint.refresh();
     }
 
     // The fireplace tab sizes its card to the viewport so it never scrolls.
